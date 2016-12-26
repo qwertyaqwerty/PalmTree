@@ -14,6 +14,11 @@ uniform float time;
 uniform float detailPhase;
 uniform float leafPhase;
 
+
+float frac(float x) {
+	return x - trunc(x);
+}
+
 float SmoothCurve( float x ) {
   return x * x *( 3.0 - 2.0 * x );
 }
