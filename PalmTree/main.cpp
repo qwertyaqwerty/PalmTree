@@ -115,16 +115,11 @@ int main()
 		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		//std::cout << "view:" << glm::to_string(view) << std::endl;
 		// Draw the loaded model
-		glm::mat4 model;
-		model = glm::rotate(model, glm::radians(285.0f), glm::vec3(1.0f, 0.37f, 0.5f)); // Translate it down a bit so it's at the center of the scene
-		model = glm::translate(model, glm::vec3(0.0f, 0.8f, 0.0f)); // Translate it down a bit so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));	// It's a bit too big for our scene, so scale it down
-		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
 		//std::cout << "model:" << glm::to_string(model) << std::endl;
 
 		glm::vec3 wind = getWind(currentFrame);
 		glUniform1f(glGetUniformLocation(shader.Program, "time"), currentFrame);
-		glUniform1f(glGetUniformLocation(shader.Program, "detailPhase"), 0.0);
 		glUniform3fv(glGetUniformLocation(shader.Program, "wind"), 1, glm::value_ptr(wind));
 		glUniform1f(glGetUniformLocation(shader.Program, "detailScale"), getDetailBendScale(currentFrame));
 
@@ -145,7 +140,21 @@ int main()
 		glUniform1i(glGetUniformLocation(shader.Program, "leafThickness"), 12);
 		glBindTexture(GL_TEXTURE_2D, leafThickness);
 
-		ourModel.Draw(shader);
+		glm::mat4 model;
+		model = glm::rotate(model, glm::radians(285.0f), glm::vec3(1.0f, 0.37f, 0.5f)); // Translate it down a bit so it's at the center of the scene
+		model = glm::translate(model, glm::vec3(0.0f, 0.8f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));	// It's a bit too big for our scene, so scale it down
+
+		for (int ridx = 0; ridx < 3; ++ridx)
+			for (int idx = 0; idx < 3; ++idx)
+			{
+				glm::mat4 instanceModel;
+				instanceModel = glm::rotate(model, glm::radians((ridx * 4 + idx) / 9.0f * 360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+				instanceModel = glm::translate(instanceModel, glm::vec3(ridx * 50.0f, idx * 50.0f + ridx * 10.0f, 0.0f));
+				glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(instanceModel));
+				glUniform1f(glGetUniformLocation(shader.Program, "detailPhase"), (ridx * 4 + idx) * 0.3);
+				ourModel.Draw(shader);
+			}
 
 		glActiveTexture(GL_TEXTURE10);
 		glBindTexture(GL_TEXTURE_2D, 0);

@@ -41,8 +41,9 @@ float SmoothTriangleWave( float x ) {
 vec3 mainBending(vec3 vPos)
 {
 	// Bend factor - Wind variation is done on the CPU.
-	float fBendScale = sqrt(dot(wind.xy, wind.xy));
-	float fBF = vPos.z * fBendScale * 0.008;
+	vec3 basePos = (model * vec4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
+	float fBendScale = length(wind.xy);
+	float fBF = position.z * fBendScale * 0.002;
 	// Smooth bending factor and increase its nearby height limit.
 	fBF += 1.0;
 	fBF *= fBF;
@@ -51,16 +52,16 @@ vec3 mainBending(vec3 vPos)
 	vec3 vNewPos = vPos;
 	vNewPos.xy += normalize(wind.xy) * fBF;
 	// Rescale
-	float fLength = sqrt(dot(position, position));
-	vPos.xyz = normalize(vNewPos.xyz)* fLength;
+	float fLength = length(vPos.xyz - basePos);
+	vPos.xyz = normalize(vNewPos.xyz - basePos) * fLength + basePos;
 	return vPos;
 }
 
 vec3 detailBending(vec3 vPos, vec3 vNormal) {
 	// Phases (object, vertex, branch)
-	float fVtxPhase = (position.x + position.y + position.z) * 2.0;
+	float fVtxPhase = (position.x + position.y + position.z) * 2.0 * 0.01;
 	// x is used for edges; y is used for branches
-	vec2 vWavesIn = vec2(time, time) + vec2(fVtxPhase + detailPhase, 0);
+	vec2 vWavesIn = vec2(time, time) + vec2(fVtxPhase + detailPhase, fVtxPhase + detailPhase);
 	// 1.975, 0.793, 0.375, 0.193 are good frequencies
 	vec4 vWaves = (frac( vWavesIn.xxyy *
 						   vec4(1.975, 0.793, 0.375, 0.193) ) *
@@ -70,21 +71,22 @@ vec3 detailBending(vec3 vPos, vec3 vNormal) {
 	vec2 vWavesSum = vWaves.xz + vWaves.yw;
 	// Edge (xy) and branch bending (z)
 	float fEdgeAtten = 1 - texture(leafEdge, TexCoords).r;
-	float fBranchAtten = length(position.xy) / 3.0;
+	float fBranchAtten = length(position.xy) / 3.0 * 0.03;
 	float fzAtten = sqrt(fBranchAtten);
-	vPos.xyz += vWavesSum.xxy * vec3(fEdgeAtten * fBranchAtten * 0.2 * vNormal.xy, fBranchAtten * 0.1) * detailScale;
+	vPos.xyz += vWavesSum.xxy * vec3(fEdgeAtten * fBranchAtten * 0.2 * vNormal.xy, fzAtten * 0.1) * detailScale;
 	return vPos;
 }
 
 void main()
 {
-	vec3 new_pos = mainBending(position);
-	if (meshId == 2) {
-		new_pos = detailBending(new_pos, normal);
-	}
-    gl_Position = projection * view * model * vec4(new_pos, 1.0f);
-
-	fragPosition = (model * vec4(new_pos, 1.0f)).xyz;
-    TexCoords = texCoords;
+	vec3 model_pos = (model * vec4(position, 1.0f)).xyz;
+	vec3 new_pos = mainBending(model_pos);
 	fragNormal = normalize((transpose(inverse(model)) * vec4(normal, 1.0f)).xyz);
+	if (meshId == 2) {
+		new_pos = detailBending(new_pos, fragNormal);
+	}
+    gl_Position = projection * view * vec4(new_pos, 1.0f);
+
+	fragPosition = new_pos;
+    TexCoords = texCoords;
 }
