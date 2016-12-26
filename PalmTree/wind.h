@@ -11,3 +11,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 extern glm::vec3 getWind(GLfloat time);
+
+extern float getDetailBendScale(GLfloat time);
+

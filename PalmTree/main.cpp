@@ -79,13 +79,17 @@ int main()
 
 
 	// Setup and compile our shaders
-	Shader shader("shaders/bending.vs", "shaders/advanced.frag");
+	Shader shader("shaders/bending.vs", "shaders/vegetation.frag");
 
 	// Load models
-	Model ourModel("object/Palm_Tree.obj");
+	Model ourModel("object/palm_tree.obj");
 
 	// Draw in wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	GLint stiffness = TextureFromFile("ENV_MP_Iraq_PlantsSansTrans_D1.jpg", string("object"), false);
+	GLint leafEdge = TextureFromFile("ENV_MP_Iraq_PlantsSansTrans_D3.jpg", string("object"), false);
+	GLint leafThickness = TextureFromFile("ENV_MP_Iraq_PlantsSansTrans_D4.jpg", string("object"), false);
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -120,9 +124,35 @@ int main()
 
 		glm::vec3 wind = getWind(currentFrame);
 		glUniform1f(glGetUniformLocation(shader.Program, "time"), currentFrame);
+		glUniform1f(glGetUniformLocation(shader.Program, "detailPhase"), 0.0);
 		glUniform3fv(glGetUniformLocation(shader.Program, "wind"), 1, glm::value_ptr(wind));
+		glUniform1f(glGetUniformLocation(shader.Program, "detailScale"), getDetailBendScale(currentFrame));
+
+		glm::vec3 light(-1.0, -1.2, -10.0);
+		glUniform3fv(glGetUniformLocation(shader.Program, "lightDirection"), 1, glm::value_ptr(light));
+
+		glUniform3fv(glGetUniformLocation(shader.Program, "eyePosition"), 1, glm::value_ptr(camera.Position));
+
+		glActiveTexture(GL_TEXTURE10);
+		glUniform1i(glGetUniformLocation(shader.Program, "leafEdge"), 10);
+		glBindTexture(GL_TEXTURE_2D, leafEdge);
+
+		glActiveTexture(GL_TEXTURE11);
+		glUniform1i(glGetUniformLocation(shader.Program, "leafStiffness"), 11);
+		glBindTexture(GL_TEXTURE_2D, stiffness);
+
+		glActiveTexture(GL_TEXTURE12);
+		glUniform1i(glGetUniformLocation(shader.Program, "leafThickness"), 12);
+		glBindTexture(GL_TEXTURE_2D, leafThickness);
 
 		ourModel.Draw(shader);
+
+		glActiveTexture(GL_TEXTURE10);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE11);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE12);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 		// Swap the buffers
 		glfwSwapBuffers(window);

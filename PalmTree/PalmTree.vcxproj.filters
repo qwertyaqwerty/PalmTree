@@ -64,5 +64,11 @@
     <None Include="shaders\bending.vs">
       <Filter>shader</Filter>
     </None>
+    <None Include="shaders\id.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shaders\vegetation.frag">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

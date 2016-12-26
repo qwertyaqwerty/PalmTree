@@ -40,7 +40,10 @@ public:
     void Draw(Shader shader)
     {
         for(GLuint i = 0; i < this->meshes.size(); i++)
+		{
+			glUniform1i(glGetUniformLocation(shader.Program, "meshId"), i);
             this->meshes[i].Draw(shader);
+		}
     }
     
 private:

@@ -6,12 +6,9 @@ out vec4 color;
 
 uniform sampler2D texture_diffuse1;
 
-uniform sampler2D leafEdge;
-uniform sampler2D leafStiffness;
-
 uniform int meshId;
 
 void main()
-{
-	color = vec4(texture(texture_diffuse1, TexCoords));
+{    
+    color = vec4(meshId / 3.0, 1.0 - meshId / 3.0, 0.0, 0.0);
 }

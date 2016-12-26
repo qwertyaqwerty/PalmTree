@@ -72,7 +72,7 @@ public:
                 ss << specularNr++; // Transfer GLuint to stream
             else if(name == "texture_normal")
                 ss << normalNr++; // Transfer GLuint to stream
-             else if(name == "texture_height")
+            else if(name == "texture_height")
                 ss << heightNr++; // Transfer GLuint to stream
             number = ss.str(); 
             // Now set the sampler to the correct texture unit
@@ -80,7 +80,7 @@ public:
             // And finally bind the texture
             glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
         }
-        
+
         // Draw mesh
         glBindVertexArray(this->VAO);
         glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);

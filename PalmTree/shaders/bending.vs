@@ -4,6 +4,8 @@ layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 texCoords;
 
 out vec2 TexCoords;
+out vec3 fragNormal;
+out vec3 fragPosition;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -12,11 +14,18 @@ uniform mat4 projection;
 uniform vec3 wind;
 uniform float time;
 uniform float detailPhase;
-uniform float leafPhase;
+uniform float detailScale;
 
+uniform sampler2D leafEdge;
+uniform sampler2D leafStiffness;
+
+uniform int meshId;
 
 float frac(float x) {
 	return x - trunc(x);
+}
+vec4 frac(vec4 v) {
+	return vec4(frac(v.x), frac(v.y), frac(v.z), frac(v.w));
 }
 
 float SmoothCurve( float x ) {
@@ -47,9 +56,35 @@ vec3 mainBending(vec3 vPos)
 	return vPos;
 }
 
+vec3 detailBending(vec3 vPos, vec3 vNormal) {
+	// Phases (object, vertex, branch)
+	float fVtxPhase = (position.x + position.y + position.z) * 2.0;
+	// x is used for edges; y is used for branches
+	vec2 vWavesIn = vec2(time, time) + vec2(fVtxPhase + detailPhase, 0);
+	// 1.975, 0.793, 0.375, 0.193 are good frequencies
+	vec4 vWaves = (frac( vWavesIn.xxyy *
+						   vec4(1.975, 0.793, 0.375, 0.193) ) *
+						   2.0 - 1.0 ) * 0.5;
+	vWaves = vec4(SmoothTriangleWave(vWaves.x), SmoothTriangleWave(vWaves.y),
+	              SmoothTriangleWave(vWaves.z), SmoothTriangleWave(vWaves.w));
+	vec2 vWavesSum = vWaves.xz + vWaves.yw;
+	// Edge (xy) and branch bending (z)
+	float fEdgeAtten = 1 - texture(leafEdge, TexCoords).r;
+	float fBranchAtten = length(position.xy) / 3.0;
+	float fzAtten = sqrt(fBranchAtten);
+	vPos.xyz += vWavesSum.xxy * vec3(fEdgeAtten * fBranchAtten * 0.2 * vNormal.xy, fBranchAtten * 0.1) * detailScale;
+	return vPos;
+}
+
 void main()
 {
 	vec3 new_pos = mainBending(position);
+	if (meshId == 2) {
+		new_pos = detailBending(new_pos, normal);
+	}
     gl_Position = projection * view * model * vec4(new_pos, 1.0f);
+
+	fragPosition = (model * vec4(new_pos, 1.0f)).xyz;
     TexCoords = texCoords;
+	fragNormal = normalize((transpose(inverse(model)) * vec4(normal, 1.0f)).xyz);
 }

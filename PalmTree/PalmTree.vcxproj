@@ -83,10 +83,12 @@
     <None Include="shaders\advanced.frag" />
     <None Include="shaders\advanced.vs" />
     <None Include="shaders\bending.vs" />
+    <None Include="shaders\id.frag" />
     <None Include="shaders\lamp.frag" />
     <None Include="shaders\lamp.vs" />
     <None Include="shaders\skybox.frag" />
     <None Include="shaders\skybox.vs" />
+    <None Include="shaders\vegetation.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
